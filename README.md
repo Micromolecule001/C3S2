@@ -3,18 +3,23 @@
 Group: IPZ-34ms Var №33 \
 Name: Boyko Dmitriy
 
-[!NOTE]
-All commands should be used in root directory
-
-Usage command: 
+Usage command in apps/ProjectDir: 
 
 Compiling
 ```
-    javac -d apps/TextAnalyzer/out $(find apps/TextAnalyzer/src -name "*.java")
+    On Linux/macOS:
+      ./gradlew build
+
+    On Windows:
+      gradlew.bat build
 ```
 
 Starting
 ```
-    java -cp apps/TextAnalyzer/out com.textanalyzer.Launcher
+    On Linux/macOS:
+      ./gradlew run
+
+    On Windows:
+      gradlew.bat run
 ```
 
