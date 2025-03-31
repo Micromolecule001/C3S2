@@ -10,11 +10,19 @@ Usage command:
 
 Compiling
 ```
-    javac -d apps/TextAnalyzer/out $(find apps/TextAnalyzer/src -name "*.java")
+    On Linux/macOS:
+      ./gradlew build
+
+    On Windows:
+      gradlew.bat build
 ```
 
 Starting
 ```
-    java -cp apps/TextAnalyzer/out com.textanalyzer.Launcher
+    On Linux/macOS:
+      ./gradlew run
+
+    On Windows:
+      gradlew.bat run
 ```
 
