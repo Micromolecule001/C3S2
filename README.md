@@ -6,7 +6,7 @@ Name: Boyko Dmitriy
 [!NOTE]
 All commands should be used in root directory
 
-Usage command: 
+Usage command in apps/ProjectDir: 
 
 Compiling
 ```
