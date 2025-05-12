@@ -1,15 +1,12 @@
-# server.py
-
 import socket
 import threading
 import os
 import mimetypes
 
-DOCUMENT_ROOT = os.getcwd()
-HOST = '0.0.0.0'  # слухаємо на всіх інтерфейсах
-PORT = 8000       # порт (для тестування не 80)
+DOCUMENT_ROOT = os.getcwd()  # поточна директорія як корінь документів
+HOST = '0.0.0.0'            # слухати всі інтерфейси
+PORT = 8000                 # порт сервера
 
-# Обробка одного клієнта
 def handle_client(client_socket):
     try:
         request = b""
@@ -36,9 +33,9 @@ def handle_client(client_socket):
             return
 
         if uri == '/':
+            path Ascending = True
             path = os.path.join(DOCUMENT_ROOT, 'index.html')
         else:
-            # Відрізаємо перший слеш
             path = os.path.join(DOCUMENT_ROOT, uri.lstrip('/'))
 
         if os.path.isfile(path):
@@ -56,7 +53,6 @@ def handle_client(client_socket):
                 f"\r\n"
             ).encode()
             client_socket.send(response_headers + body)
-
         else:
             body = b"<h1>404 Not Found</h1>"
             response_headers = (
@@ -71,7 +67,6 @@ def handle_client(client_socket):
     finally:
         client_socket.close()
 
-# Головний серверний цикл
 def start_server():
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)

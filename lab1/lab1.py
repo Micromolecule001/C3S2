@@ -48,32 +48,12 @@ def download_delegation_file(ftp_host, ftp_path, filename):
     file_buffer.seek(0)
     return file_buffer.read().decode('utf-8').splitlines()
 
-
-    ip = int(ipaddress.IPv4Address(ip_str))
-    for line in delegation_lines:
-        parts = line.strip().split('|')
-        if len(parts) < 7:
-            continue
-        if parts[2] != 'ipv4':
-            continue
-        try:
-            net_addr_str = parts[3]
-            count = int(parts[4])
-            prefix_length = 32 - round(math.log2(count))
-            network = ipaddress.IPv4Network(f"{net_addr_str}/{prefix_length}", strict=False)
-            if ip in network:
-                return rir_name, line
-        except Exception:
-            continue
-    return None, None
-
 def check_all_rirs(ip_str):
     rirs = [
         {"name": "RIPE NCC", "host": "ftp.ripe.net", "path": "/pub/stats/ripencc", "file": "delegated-ripencc-latest"}
     ]
 
     for rir in rirs:
-        print(f"🔄 Перевірка в {rir['name']}...")
         try:
             lines = download_delegation_file(rir["host"], rir["path"], rir["file"])
             rir_name, result = find_delegation(ip_str, lines, rir["name"])
@@ -84,15 +64,13 @@ def check_all_rirs(ip_str):
     return None, None
 
 # --- Основна програма ---
-print("🌍 Отримую вашу публічну IP-адресу...")
 my_ip = get_public_ip()
 print(f"✅ Ваша публічна IP-адреса: {my_ip}")
 
-print("🔍 Починаю перевірку по всіх RIR...")
+print(" Починаю перевірку по всіх RIR...")
 rir_name, matching_line = check_all_rirs(my_ip)
 
 if matching_line:
-    print(f"\n🎯 IP-адреса знайдена в {rir_name}!")
     print(f"ℹ️ Інформація про делегацію:\n{matching_line}")
 else:
     print("\n❌ IP-адреса не знайдена в жодній делегації.")
