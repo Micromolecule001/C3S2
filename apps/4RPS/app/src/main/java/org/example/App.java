@@ -1,23 +1,29 @@
 package org.example;
 
-import com.formdev.flatlaf.FlatLightLaf;
-import org.example.ui.GameWindow;
+import org.example.ui.MenuWindow;
 
-import javax.swing.*;
+import com.formdev.flatlaf.FlatLightLaf;
 
 public class App {
-    
     public static String getGreeting() {
-        return "Hello";
+        return "hello world";
     }
-    
+
     public static void main(String[] args) {
         try {
-            UIManager.setLookAndFeel(new FlatLightLaf());
-        } catch (UnsupportedLookAndFeelException e) {
-           e.printStackTrace();
+            // Set FlatLaf theme
+            FlatLightLaf.setup();
+
+            FlatLightLaf.setGlobalExtraDefaults(java.util.Map.of(
+                "@font", "Ubuntu Mono-BOLD-18"
+            ));
+        } catch (Exception e) {
+            System.err.println("Failed to initialize LaF or font");
         }
 
-        SwingUtilities.invokeLater(() -> new App().initUI());
+        javax.swing.SwingUtilities.invokeLater(() -> {
+                        javax.swing.JFrame frame = new javax.swing.JFrame("FlatLaf Demo"); 
+            new MenuWindow().setVisible(true);
+        });
+    }
 }
-

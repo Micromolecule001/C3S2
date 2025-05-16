@@ -1,17 +1,18 @@
 package org.example.logic;
 
 public enum Choice {
-    ROCK, PAPER, SCISSORS;
+    ROCK("Камень"),
+    PAPER("Бумага"),
+    SCISSORS("Ножницы");
 
-    public static Choice random() {
-        Choice[] choices = values();
-        return choices[(int) (Math.random() * choices.length)];
+    private final String displayName;
+
+    Choice(String displayName) {
+        this.displayName = displayName;
     }
 
-    public boolean beats(Choice other) {
-        return (this == ROCK && other == SCISSORS) ||
-               (this == PAPER && other == ROCK) ||
-               (this == SCISSORS && other == PAPER);
+    public String getDisplayName() {
+        System.out.println("Into getDisplayName: " + displayName);
+        return displayName;
     }
 }
-

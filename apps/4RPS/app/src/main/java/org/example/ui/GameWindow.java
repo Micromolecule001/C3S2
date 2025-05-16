@@ -1,128 +1,95 @@
 package org.example.ui;
 
+import javax.swing.*;
+import java.awt.*;
+import java.io.File;
 import org.example.logic.Choice;
 import org.example.logic.GameLogic;
 
-import javax.swing.*;
-import java.awt.*;
-
 public class GameWindow extends JFrame {
-    private JFrame mainFrame;    
-    private JPanel mainPanel;
-    private CardLayout cardLayout;
-
+    private final boolean isVsComputer;
+    private JLabel player1ChoiceLabel;
+    private JLabel player2ChoiceLabel;
     private JLabel resultLabel;
-    private JLabel resultImageLabel;
-    private JLabel playerLabel;
-    private JLabel computerLabel;
+    private Choice player1Choice;
+    private Choice player2Choice;
+    private boolean isPlayer1Turn;
 
-    private JButton rockButton;
-    private JButton paperButton;
-    private JButton scissorsButton;
+    public GameWindow(boolean isVsComputer) {
+        this.isVsComputer = isVsComputer;
+        this.isPlayer1Turn = true;
+        setTitle("Камень-Ножницы-Бумага");
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setSize(600, 400);
+        setLocationRelativeTo(null);
 
-    public void initUI() {
-        mainFrame = new JFrame("Rock, Paper, Scissors");
-        mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        mainFrame.setSize(400, 300);
+        JPanel mainPanel = new JPanel(new BorderLayout(10, 10));
+        mainPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        cardLayout = new CardLayout();
-        mainPanel = new JPanel(cardLayout);
+        // Панель кнопок
+        JPanel buttonPanel = new JPanel(new GridLayout(1, 3, 10, 10));
+        for (Choice choice : Choice.values()) {
+            JButton button = new JButton(choice.getDisplayName());
+            button.addActionListener(e -> handleChoice(choice));
+            buttonPanel.add(button);
+        }
 
-        mainPanel.add(createMenuPanel(), "menu");
-        mainPanel.add(createGamePanel(), "game");
+        // Панель результатов
+        JPanel resultPanel = new JPanel(new GridLayout(1, 1));
+        resultLabel = new JLabel("Сделайте ваш выбор!", SwingConstants.CENTER);
+        resultPanel.add(resultLabel);
 
-        mainFrame.add(mainPanel);
-        cardLayout.show(mainPanel, "menu");
+        // Панель ходов
+        JPanel choicesPanel = new JPanel(new GridLayout(2, 2, 20, 10));
+        player1ChoiceLabel = new JLabel("Игрок 1: -", SwingConstants.CENTER);
+        player2ChoiceLabel = new JLabel(isVsComputer ? "Компьютер: -" : "Игрок 2: -", SwingConstants.CENTER);
 
-        mainFrame.setVisible(true);
-    }
-
-    private JPanel createMenuPanel() {
-        JPanel panel = new JPanel(new GridLayout(3, 1));
-
-        JLabel title = new JLabel("Select Mode", SwingConstants.CENTER);
-        title.setFont(new Font("Ubuntu Nerd Font", Font.BOLD, 22));
-        panel.add(title);
-
-        JButton pvpButton = new JButton("👤 vs 👤 Player");
-        JButton pvcButton = new JButton("👤 vs 🤖 Computer");
-
-        pvpButton.addActionListener(e -> {
-            startGame("PVP");
+        JButton buttonNewG = new JButton("New Game");
+        JButton buttonMenu = new JButton("Menu");
+        buttonNewG.addActionListener(e -> resetTurn());
+        buttonMenu.addActionListener(e -> {
+            new MenuWindow().setVisible(true); 
+            dispose(); 
         });
 
-        pvcButton.addActionListener(e -> {
-            startGame("PVC");
-        });
+        choicesPanel.add(buttonNewG);
+        choicesPanel.add(buttonMenu);
+        choicesPanel.add(player1ChoiceLabel);
+        choicesPanel.add(player2ChoiceLabel);
 
-        panel.add(pvpButton);
-        panel.add(pvcButton);
 
-        return panel;
+        mainPanel.add(buttonPanel, BorderLayout.NORTH);
+        mainPanel.add(resultPanel, BorderLayout.CENTER);
+        mainPanel.add(choicesPanel, BorderLayout.SOUTH);
+
+        add(mainPanel);
     }
 
-    private JPanel createGamePanel() {
-        JPanel panel = new JPanel(new BorderLayout());
-
-        resultLabel = new JLabel("Choose your move!", SwingConstants.CENTER);
-        resultLabel.setFont(new Font("Ubuntu Nerd Font", Font.BOLD, 22));
-        panel.add(resultLabel, BorderLayout.NORTH);
-
-        resultImageLabel = new JLabel();
-        resultImageLabel.setHorizontalAlignment(SwingConstants.CENTER);
-        resultImageLabel.setVisible(false);
-        panel.add(resultImageLabel, BorderLayout.EAST);
-
-        JPanel buttonPanel = new JPanel(new FlowLayout());
-        rockButton = new JButton("🪨 Rock");
-        paperButton = new JButton("📄 Paper");
-        scissorsButton = new JButton("✂️ Scissors");
-
-        rockButton.addActionListener(e -> play("ROCK"));
-        paperButton.addActionListener(e -> play("PAPER"));
-        scissorsButton.addActionListener(e -> play("SCISSORS"));
-
-        buttonPanel.add(rockButton);
-        buttonPanel.add(paperButton);
-        buttonPanel.add(scissorsButton);
-
-        panel.add(buttonPanel, BorderLayout.CENTER);
-
-        JPanel bottomPanel = new JPanel(new GridLayout(2, 1));
-
-        JPanel statusPanel = new JPanel(new GridLayout(1, 2));
-        playerLabel = new JLabel("You: ", SwingConstants.CENTER);
-        computerLabel = new JLabel("Opponent: ", SwingConstants.CENTER);
-        statusPanel.add(playerLabel);
-        statusPanel.add(computerLabel);
-
-        JButton backButton = new JButton("🔙 Back to Menu");
-        backButton.addActionListener(e -> cardLayout.show(mainPanel, "menu"));
-
-        bottomPanel.add(statusPanel);
-        bottomPanel.add(backButton);
-
-        panel.add(bottomPanel, BorderLayout.SOUTH);
-
-        return panel;
-    }
-
-    private void play(Choice playerChoice) {
-        Choice computerChoice = Choice.random();
-        playerLabel.setText("You: " + playerChoice);
-        computerLabel.setText("Computer: " + computerChoice);
-
-        String resultText = GameLogic.getResult(playerChoice, computerChoice);
-        resultLabel.setText(resultText);
-
-        String imagePath = GameLogic.getImagePath(playerChoice);
-        var imageUrl = getClass().getResource(imagePath);
-        if (imageUrl != null) {
-            resultImageLabel.setIcon(new ImageIcon(imageUrl));
-            resultImageLabel.setVisible(true);
+    private void handleChoice(Choice choice) {
+        if (isPlayer1Turn) {
+            player1Choice = choice;
+            player1ChoiceLabel.setText("Игрок 1: " + choice.getDisplayName());
+            if (isVsComputer) {
+                player2Choice = GameLogic.getComputerChoice();
+                player2ChoiceLabel.setText("Компьютер: " + player2Choice.getDisplayName());
+                resultLabel.setText(GameLogic.determineWinner(player1Choice, player2Choice));
+            } else {
+                isPlayer1Turn = false;
+                resultLabel.setText("Игрок 2, ваш ход!");
+            }
         } else {
-            System.err.println("Image not found: " + imagePath);
+            player2Choice = choice;
+            player2ChoiceLabel.setText("Игрок 2: " + player2Choice.getDisplayName());
+            resultLabel.setText(GameLogic.determineWinner(player1Choice, player2Choice));
         }
     }
-}
 
+    private void resetTurn() {
+        isPlayer1Turn = true;
+        player1Choice = null;
+        player2Choice = null;
+        player1ChoiceLabel.setText("Игрок 1: -");
+        player2ChoiceLabel.setText(isVsComputer ? "Компьютер: -" : "Игрок 2: -");
+        resultLabel.setText("Сделайте ваш выбор!");
+    }
+}
