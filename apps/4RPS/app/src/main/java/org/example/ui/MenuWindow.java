@@ -1,4 +1,4 @@
-ackage org.example.ui;
+package org.example.ui;
 
 import javax.swing.*;
 import java.awt.*;
