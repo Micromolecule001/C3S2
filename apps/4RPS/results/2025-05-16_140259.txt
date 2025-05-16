@@ -1,0 +1,5 @@
+Game Result
+Timestamp: 2025-05-16_140259
+Player 1: PAPER
+Player 2: PAPER
+Winner: Ничья!

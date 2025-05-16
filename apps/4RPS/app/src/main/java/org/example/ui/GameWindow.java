@@ -2,7 +2,6 @@ package org.example.ui;
 
 import javax.swing.*;
 import java.awt.*;
-import java.io.File;
 import org.example.logic.Choice;
 import org.example.logic.GameLogic;
 
@@ -57,7 +56,6 @@ public class GameWindow extends JFrame {
         choicesPanel.add(player1ChoiceLabel);
         choicesPanel.add(player2ChoiceLabel);
 
-
         mainPanel.add(buttonPanel, BorderLayout.NORTH);
         mainPanel.add(resultPanel, BorderLayout.CENTER);
         mainPanel.add(choicesPanel, BorderLayout.SOUTH);
@@ -72,7 +70,9 @@ public class GameWindow extends JFrame {
             if (isVsComputer) {
                 player2Choice = GameLogic.getComputerChoice();
                 player2ChoiceLabel.setText("Компьютер: " + player2Choice.getDisplayName());
-                resultLabel.setText(GameLogic.determineWinner(player1Choice, player2Choice));
+                String winner = GameLogic.determineWinner(player1Choice, player2Choice);
+                resultLabel.setText(winner);
+                GameLogic.gameResults(player1Choice, player2Choice, winner);
             } else {
                 isPlayer1Turn = false;
                 resultLabel.setText("Игрок 2, ваш ход!");
@@ -80,7 +80,9 @@ public class GameWindow extends JFrame {
         } else {
             player2Choice = choice;
             player2ChoiceLabel.setText("Игрок 2: " + player2Choice.getDisplayName());
-            resultLabel.setText(GameLogic.determineWinner(player1Choice, player2Choice));
+            String winner = GameLogic.determineWinner(player1Choice, player2Choice);
+            resultLabel.setText(winner);
+            GameLogic.gameResults(player1Choice, player2Choice, winner);
         }
     }
 
