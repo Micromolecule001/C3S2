@@ -1,12 +1,12 @@
 package org.example;
 
-import org.example.ui.MenuWindow;
+import org.example.ui.GameUI;
 
 import com.formdev.flatlaf.FlatLightLaf;
 
 public class App {
-    public static String getGreeting() {
-        return "hello world";
+    public String getGreeting() {
+        return "Hello World!";
     }
 
     public static void main(String[] args) {
@@ -23,7 +23,8 @@ public class App {
 
         javax.swing.SwingUtilities.invokeLater(() -> {
             javax.swing.JFrame frame = new javax.swing.JFrame("FlatLaf Demo"); 
-            new MenuWindow().setVisible(true);
+            new GameUI();
         });
     }
 }
+
