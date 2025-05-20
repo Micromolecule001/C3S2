@@ -1,0 +1,5 @@
+Game Result
+Timestamp: 2025-05-20_200828
+Player 1: PAPER
+Player 2: ROCK
+Winner: Игрок 1 победил!

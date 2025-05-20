@@ -1,0 +1,5 @@
+Game Result
+Timestamp: 2025-05-20_200827
+Player 1: SCISSORS
+Player 2: ROCK
+Winner: Игрок 2 победил!

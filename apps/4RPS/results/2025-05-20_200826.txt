@@ -1,0 +1,5 @@
+Game Result
+Timestamp: 2025-05-20_200826
+Player 1: ROCK
+Player 2: ROCK
+Winner: Ничья!

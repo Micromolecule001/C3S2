@@ -1,0 +1,5 @@
+Game Result
+Timestamp: 2025-05-20_200807
+Player 1: PAPER
+Player 2: SCISSORS
+Winner: Игрок 2 победил!
