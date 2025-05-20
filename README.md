@@ -1,4 +1,4 @@
-# Crossplathforming-dev university ( Java )
+# Cross-Platforming-Development university ( Java )
 
 Group: IPZ-34ms Var №33 \
 Name: Boyko Dmitriy
