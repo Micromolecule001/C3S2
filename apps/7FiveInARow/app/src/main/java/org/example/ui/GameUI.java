@@ -10,9 +10,10 @@ import java.awt.event.MouseEvent;
 public class GameUI {
     private final GameLogic gameLogic = new GameLogic();
     private char currentPlayer = GameLogic.PLAYER_X;
+    private JFrame frame;
 
     public void start() {
-        JFrame frame = new JFrame("Гра: П'ять в ряд");
+        frame = new JFrame("Гра: П’ять в ряд");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(800, 800);
 
@@ -25,7 +26,8 @@ public class GameUI {
                         g.drawRect(j * cellSize, i * cellSize, cellSize, cellSize);
                         char symbol = gameLogic.getBoard()[i][j];
                         if (symbol != GameLogic.EMPTY) {
-                            g.drawString(String.valueOf(symbol), j * cellSize + cellSize / 2, i * cellSize + cellSize / 2);
+                            g.setFont(new Font("Arial", Font.PLAIN, 20));
+                            g.drawString(String.valueOf(symbol), j * cellSize + cellSize / 3, i * cellSize + 2 * cellSize / 3);
                         }
                     }
                 }
@@ -34,15 +36,20 @@ public class GameUI {
 
         panel.addMouseListener(new MouseAdapter() {
             public void mousePressed(MouseEvent e) {
-                int cellSize = panel.getWidth() / GameLogic.SIZE;
-                int row = e.getY() / cellSize;
-                int col = e.getX() / cellSize;
-                if (gameLogic.makeMove(row, col, currentPlayer)) {
-                    if (gameLogic.checkWin(currentPlayer)) {
-                        JOptionPane.showMessageDialog(frame, "Гравець " + currentPlayer + " виграв!");
+                if (currentPlayer == GameLogic.PLAYER_X) { // Хід гравця
+                    int cellSize = panel.getWidth() / GameLogic.SIZE;
+                    int row = e.getY() / cellSize;
+                    int col = e.getX() / cellSize;
+                    if (gameLogic.makeMove(row, col, currentPlayer)) {
+                        panel.repaint();
+                        if (gameLogic.checkWin(currentPlayer)) {
+                            JOptionPane.showMessageDialog(frame, "Гравець " + currentPlayer + " виграв!");
+                            frame.dispose();
+                            return;
+                        }
+                        currentPlayer = GameLogic.PLAYER_O;
+                        handleComputerMove(panel); // Викликаємо хід комп’ютера
                     }
-                    currentPlayer = (currentPlayer == GameLogic.PLAYER_X) ? GameLogic.PLAYER_O : GameLogic.PLAYER_X;
-                    panel.repaint();
                 }
             }
         });
@@ -50,5 +57,15 @@ public class GameUI {
         frame.add(panel);
         frame.setVisible(true);
     }
-}
 
+    private void handleComputerMove(JPanel panel) {
+        int[] move = gameLogic.computerMove();
+        panel.repaint();
+        if (gameLogic.checkWin(GameLogic.PLAYER_O)) {
+            JOptionPane.showMessageDialog(frame, "Комп’ютер виграв!");
+            frame.dispose();
+        } else {
+            currentPlayer = GameLogic.PLAYER_X;
+        }
+    }
+}
