@@ -11,15 +11,19 @@ public class Account {
         this.balance = 0.0;
     }
 
-    public void deposit(double amount) {
+    public synchronized void deposit(double amount) {
         balance += amount;
     }
 
-    public void withdraw(double amount) {
-        balance -= amount;
+    public synchronized boolean withdraw(double amount) {
+        if (balance >= amount) {
+            balance -= amount;
+            return true;
+        }
+        return false;
     }
 
-    public double getBalance() {
+    public synchronized double getBalance() {
         return balance;
     }
 

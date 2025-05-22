@@ -6,10 +6,14 @@ import org.example.logic.Bank;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class ATMFrame extends JFrame {
     private final ATM atm;
     private final JTextArea output;
+    private String demoAccountId;
 
     public ATMFrame() {
         super("Симуляція роботи банкомату");
@@ -20,12 +24,13 @@ public class ATMFrame extends JFrame {
         Bank bank = new Bank();
         this.atm = new ATM(bank);
 
-        JPanel panel = new JPanel(new GridLayout(5, 1));
+        JPanel panel = new JPanel(new GridLayout(6, 1)); // 6 кнопок
 
         JButton openAccount = new JButton("Відкрити рахунок");
         JButton closeAccount = new JButton("Закрити рахунок");
         JButton deposit = new JButton("Поповнити рахунок");
         JButton withdraw = new JButton("Зняти гроші");
+        JButton demoButton = new JButton("Демо багатопоточності"); // нова кнопка
 
         output = new JTextArea();
         output.setEditable(false);
@@ -34,11 +39,13 @@ public class ATMFrame extends JFrame {
         closeAccount.addActionListener(this::handleClose);
         deposit.addActionListener(this::handleDeposit);
         withdraw.addActionListener(this::handleWithdraw);
+        demoButton.addActionListener(this::handleDemo); // обробка
 
         panel.add(openAccount);
         panel.add(closeAccount);
         panel.add(deposit);
         panel.add(withdraw);
+        panel.add(demoButton); // додано кнопку
         add(panel, BorderLayout.NORTH);
         add(new JScrollPane(output), BorderLayout.CENTER);
     }
@@ -82,5 +89,42 @@ public class ATMFrame extends JFrame {
             output.append("Невірний формат суми.\n");
         }
     }
-}
 
+    private void handleDemo(ActionEvent e) {
+        if (demoAccountId == null) {
+            demoAccountId = atm.openAccount("Demo User");
+            output.append("⚙️ Створено демо-рахунок з ID: " + demoAccountId + "\n");
+        }
+
+        ExecutorService executor = Executors.newFixedThreadPool(5);
+        for (int i = 0; i < 5; i++) {
+            executor.submit(() -> {
+                String threadName = Thread.currentThread().getName();
+                for (int j = 0; j < 5; j++) {
+                    double amount = ThreadLocalRandom.current().nextDouble(10, 100);
+                    boolean isDeposit = ThreadLocalRandom.current().nextBoolean();
+
+                    boolean result;
+                    String action;
+                    if (isDeposit) {
+                        result = atm.deposit(demoAccountId, amount);
+                        action = "поповнення на " + String.format("%.2f", amount);
+                    } else {
+                        result = atm.withdraw(demoAccountId, amount);
+                        action = "зняття на " + String.format("%.2f", amount);
+                    }
+
+                    String log = "[" + threadName + "] " + action + (result ? " ✔️" : " ❌") + "\n";
+                    SwingUtilities.invokeLater(() -> output.append(log));
+
+                    try {
+                        Thread.sleep(500);
+                    } catch (InterruptedException ex) {
+                        Thread.currentThread().interrupt();
+                    }
+                }
+            });
+        }
+        executor.shutdown();
+    }
+}

@@ -51,7 +51,6 @@ public class GameLogic {
         return true;
     }
 
-    // Новий метод для ходу комп'ютера
     public int[] computerMove() {
         // 1. Перевірка на виграшний хід
         for (int i = 0; i < SIZE; i++) {
