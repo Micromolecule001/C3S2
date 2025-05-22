@@ -3,8 +3,6 @@
  */
 package org.example;
 
-import org.example.logic.Game;
-
 import org.example.logic.Board;
 import org.example.ui.SwingGameWindow;
 

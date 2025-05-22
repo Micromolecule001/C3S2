@@ -5,8 +5,7 @@ import org.example.logic.Cell;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.util.*;
 
 public class SwingGameWindow extends JFrame {
     private final Board playerBoard;
@@ -17,6 +16,8 @@ public class SwingGameWindow extends JFrame {
 
     private final JButton[][] computerButtons = new JButton[10][10];
     private final boolean[][] computerRevealed = new boolean[10][10];
+
+    private final Queue<int[]> targetQueue = new LinkedList<>();
 
     public SwingGameWindow(Board playerBoard, Board computerBoard) {
         this.playerBoard = playerBoard;
@@ -84,22 +85,49 @@ public class SwingGameWindow extends JFrame {
 
     private void computerMove() {
         while (true) {
-            int x = (int)(Math.random() * 10);
-            int y = (int)(Math.random() * 10);
+            int x, y;
+
+            if (!targetQueue.isEmpty()) {
+                int[] next = targetQueue.poll();
+                x = next[0];
+                y = next[1];
+            } else {
+                do {
+                    x = (int)(Math.random() * 10);
+                    y = (int)(Math.random() * 10);
+                } while (playerBoard.getGrid()[x][y].isHit());
+            }
+
             Cell[][] grid = playerBoard.getGrid();
-            if (!grid[x][y].isHit()) {
-                boolean hit = playerBoard.shootAt(x, y);
-                updatePlayerBoard();
+            if (grid[x][y].isHit()) continue;
 
-                if (playerBoard.allShipsSunk()) {
-                    statusLabel.setText("Комп'ютер переміг.");
-                    disableEnemyBoard();
-                    return;
-                }
+            boolean hit = playerBoard.shootAt(x, y);
+            updatePlayerBoard();
 
-                if (!hit) {
-                    statusLabel.setText("Ваш хід");
-                    break;
+            if (playerBoard.allShipsSunk()) {
+                statusLabel.setText("Комп'ютер переміг.");
+                disableEnemyBoard();
+                return;
+            }
+
+            if (hit) {
+                statusLabel.setText("Комп'ютер влучив!");
+                addSurroundingTargets(x, y);
+            } else {
+                statusLabel.setText("Ваш хід");
+                break;
+            }
+        }
+    }
+
+    private void addSurroundingTargets(int x, int y) {
+        int[][] directions = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
+        for (int[] dir : directions) {
+            int nx = x + dir[0];
+            int ny = y + dir[1];
+            if (nx >= 0 && nx < 10 && ny >= 0 && ny < 10) {
+                if (!playerBoard.getGrid()[nx][ny].isHit()) {
+                    targetQueue.add(new int[]{nx, ny});
                 }
             }
         }
@@ -119,18 +147,18 @@ public class SwingGameWindow extends JFrame {
     }
 
     private void updateComputerBoard() {
-       Cell[][] grid = computerBoard.getGrid();
-       for (int x = 0; x < 10; x++) {
-           for (int y = 0; y < 10; y++) {
-               if (computerRevealed[x][y]) continue;
-               if (grid[x][y].isHit()) {
-                   computerButtons[x][y].setBackground(grid[x][y].hasShip() ? Color.RED : Color.WHITE);
-                   computerButtons[x][y].setEnabled(false);
-                   computerRevealed[x][y] = true;
-               }
-           }
-       }
-    }   
+        Cell[][] grid = computerBoard.getGrid();
+        for (int x = 0; x < 10; x++) {
+            for (int y = 0; y < 10; y++) {
+                if (computerRevealed[x][y]) continue;
+                if (grid[x][y].isHit()) {
+                    computerButtons[x][y].setBackground(grid[x][y].hasShip() ? Color.RED : Color.WHITE);
+                    computerButtons[x][y].setEnabled(false);
+                    computerRevealed[x][y] = true;
+                }
+            }
+        }
+    }
 
     private void disableEnemyBoard() {
         for (int i = 0; i < 10; i++)
