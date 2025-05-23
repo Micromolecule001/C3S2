@@ -1,36 +1,32 @@
 import socket
 import time
 
-HOST = '0.0.0.0'
-PORT = 65432
-
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-server_socket.bind((HOST, PORT))
+server_socket.bind(("0.0.0.0", 65432))
 server_socket.listen(1)
+print("Server listening...")
 
-print(f"Server is listening on {HOST}:{PORT}...")
 conn, addr = server_socket.accept()
 print(f"Connected by {addr}")
 
-total_received = 0
+buffer_size = 4096
+total_bytes = 0
 start_time = time.time()
 
 while True:
-    data = conn.recv(4096)
+    data = conn.recv(buffer_size)
     if not data:
         break
-    total_received += len(data)
+    total_bytes += len(data)
 
 end_time = time.time()
-duration = end_time - start_time
 
-conn.shutdown(socket.SHUT_RDWR)
+conn.send(b"Transfer complete")
 conn.close()
 server_socket.close()
 
-if duration > 0:
-    speed_bps = total_received / duration
-    print(f"Received {total_received} bytes in {duration:.2f} seconds.")
-    print(f"Speed: {speed_bps:.2f} B/s ({speed_bps/1024:.2f} KiB/s, {speed_bps/1024/1024:.2f} MiB/s)")
-else:
-    print("Duration was too short to measure speed.")
+duration = end_time - start_time
+speed_bps = total_bytes / duration
+
+print(f"Received: {total_bytes} bytes in {duration:.2f} seconds.")
+print(f"Speed: {speed_bps:.2f} B/s ({speed_bps / 1024:.2f} KiB/s, {speed_bps / 1024 / 1024:.2f} MiB/s)")
