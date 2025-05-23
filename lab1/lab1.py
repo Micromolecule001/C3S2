@@ -1,77 +1,34 @@
 import requests
 from ftplib import FTP
-import io
 import ipaddress
-import math
 
-def get_public_ip():
-    response = requests.get("https://api.ipify.org")
-    response.raise_for_status()
-    return response.text.strip()
+# Етап 1: Отримуємо публічну IP
+ip = requests.get('https://api.ipify.org').text
+print(f"Ваша IP: {ip}")
 
-def find_delegation(ip_str, delegation_lines, rir_name):
-    ip = ipaddress.IPv4Address(ip_str)
-    for line in delegation_lines:
-        parts = line.strip().split('|')
-        if len(parts) < 7 or parts[2] != 'ipv4':
-            continue
-        try:
-            net_start = parts[3]
-            count = int(parts[4])
+# Етап 2: Завантажуємо файл делегацій і шукаємо відповідність
+ftp = FTP('ftp.ripe.net')
+ftp.login()
+with open('delegated-ripencc-latest', 'wb') as f:
+    ftp.retrbinary('RETR /pub/stats/ripencc/delegated-ripencc-latest', f.write)
+ftp.quit()
 
-            # Обчислюємо кінець діапазону
-            start_ip = int(ipaddress.IPv4Address(net_start))
-            end_ip = start_ip + count - 1
-            end_ip_addr = ipaddress.IPv4Address(end_ip)
-
-            # Створюємо список мереж, що покривають цей діапазон
-            networks = ipaddress.summarize_address_range(
-                ipaddress.IPv4Address(net_start),
-                end_ip_addr
-            )
-
-            # Перевірка входження IP в одну з мереж
-            for network in networks:
-                if ip in network:
-                    return rir_name, line
-        except Exception:
-            continue
-    return None, None
-
-def download_delegation_file(ftp_host, ftp_path, filename):
-    ftp = FTP(ftp_host)
-    ftp.login()
-    ftp.cwd(ftp_path)
-    file_buffer = io.BytesIO()
-    ftp.retrbinary(f"RETR {filename}", file_buffer.write)
-    ftp.quit()
-    file_buffer.seek(0)
-    return file_buffer.read().decode('utf-8').splitlines()
-
-def check_all_rirs(ip_str):
-    rirs = [
-        {"name": "RIPE NCC", "host": "ftp.ripe.net", "path": "/pub/stats/ripencc", "file": "delegated-ripencc-latest"}
-    ]
-
-    for rir in rirs:
-        try:
-            lines = download_delegation_file(rir["host"], rir["path"], rir["file"])
-            rir_name, result = find_delegation(ip_str, lines, rir["name"])
-            if result:
-                return rir_name, result
-        except Exception as e:
-            print(f"⚠️ Помилка з {rir['name']}: {e}")
-    return None, None
-
-# --- Основна програма ---
-my_ip = get_public_ip()
-print(f"✅ Ваша публічна IP-адреса: {my_ip}")
-
-print(" Починаю перевірку по всіх RIR...")
-rir_name, matching_line = check_all_rirs(my_ip)
-
-if matching_line:
-    print(f"ℹ️ Інформація про делегацію:\n{matching_line}")
-else:
-    print("\n❌ IP-адреса не знайдена в жодній делегації.")
+ip_int = int(ipaddress.IPv4Address(ip))
+with open('delegated-ripencc-latest', 'r') as f:
+    for line in f:
+        if line.startswith('ripencc') and 'ipv4' in line:
+            parts = line.split('|')
+            netaddr, size = parts[3], parts[4]
+            # Пропускаємо невалідні IP-адреси
+            if not netaddr.replace('.', '').isdigit():
+                continue
+            try:
+                size = int(size)
+                mask = 32 - (size.bit_length() - 1)
+                net = ipaddress.IPv4Network(f"{netaddr}/{mask}")
+                if ip_int & int(net.netmask) == int(net.network_address):
+                    print(f"Делегація: {line.strip()}")
+                    break
+            except ValueError:
+                continue
 
