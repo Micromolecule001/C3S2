@@ -3,11 +3,13 @@ import threading
 import os
 import mimetypes
 
-DOCUMENT_ROOT = '.'  # поточна директорія, де index.html і kotick.jpg
+DOCUMENT_ROOT = '.'  
 DEFAULT_FILE = 'index.html'
-HOST = '0.0.0.0'
-PORT = 80
+HOST = '192.168.0.102'
+PORT = 8000
 BUFFER_SIZE = 1024
+
+#               ssh -o StrictHostKeyChecking=no student@31.134.121.208 -p 10022 -N -R 15055:192.168.0.102:8000
 
 def handle_client(connection, address):
     try:
@@ -24,7 +26,7 @@ def handle_client(connection, address):
         method, uri, _ = parts
 
         if method != 'GET':
-            send_response(connection, 405, 'Method Not Allowed', 'text/plain', b'Method Not Allowed')
+            send_response(connection, 405, 'Method Not Allowed', 'text/plain', 'Method Not Allowed')
             return
 
         # Обробка URI
