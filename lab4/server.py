@@ -3,82 +3,70 @@ import threading
 import os
 import mimetypes
 
-DOCUMENT_ROOT = os.getcwd()  # поточна директорія як корінь документів
-HOST = '0.0.0.0'            # слухати всі інтерфейси
-PORT = 8000                 # порт сервера
+DOCUMENT_ROOT = '.'  # поточна директорія, де index.html і kotick.jpg
+DEFAULT_FILE = 'index.html'
+HOST = '0.0.0.0'
+PORT = 80
+BUFFER_SIZE = 1024
 
-def handle_client(client_socket):
+def handle_client(connection, address):
     try:
-        request = b""
-        while b"\r\n\r\n" not in request:
-            chunk = client_socket.recv(1024)
-            if not chunk:
-                break
-            request += chunk
-
-        lines = request.decode().split("\r\n")
-        if len(lines) == 0:
+        request = connection.recv(BUFFER_SIZE).decode('utf-8')
+        if not request:
             return
 
-        request_line = lines[0]
+        # Розбір першого рядка HTTP-запиту
+        request_line = request.splitlines()[0]
         parts = request_line.split()
         if len(parts) != 3:
             return
 
-        method, uri, version = parts
+        method, uri, _ = parts
 
         if method != 'GET':
-            response = f"{version} 405 Method Not Allowed\r\n\r\n"
-            client_socket.send(response.encode())
+            send_response(connection, 405, 'Method Not Allowed', 'text/plain', b'Method Not Allowed')
             return
 
+        # Обробка URI
         if uri == '/':
-            path Ascending = True
-            path = os.path.join(DOCUMENT_ROOT, 'index.html')
+            filepath = os.path.join(DOCUMENT_ROOT, DEFAULT_FILE)
         else:
-            path = os.path.join(DOCUMENT_ROOT, uri.lstrip('/'))
+            filepath = os.path.join(DOCUMENT_ROOT, uri.lstrip('/'))
 
-        if os.path.isfile(path):
-            with open(path, 'rb') as f:
-                body = f.read()
-            content_type, _ = mimetypes.guess_type(path)
-            if not content_type:
-                content_type = 'application/octet-stream'
-
-            response_headers = (
-                f"{version} 200 OK\r\n"
-                f"Content-Type: {content_type}\r\n"
-                f"Content-Length: {len(body)}\r\n"
-                f"Connection: close\r\n"
-                f"\r\n"
-            ).encode()
-            client_socket.send(response_headers + body)
+        if os.path.isfile(filepath):
+            with open(filepath, 'rb') as f:
+                content = f.read()
+            content_type = mimetypes.guess_type(filepath)[0] or 'application/octet-stream'
+            send_response(connection, 200, 'OK', content_type, content)
         else:
-            body = b"<h1>404 Not Found</h1>"
-            response_headers = (
-                f"{version} 404 Not Found\r\n"
-                f"Content-Type: text/html\r\n"
-                f"Content-Length: {len(body)}\r\n"
-                f"Connection: close\r\n"
-                f"\r\n"
-            ).encode()
-            client_socket.send(response_headers + body)
+            send_response(connection, 404, 'Not Found', 'text/html', b'<h1>404 Not Found</h1>')
 
+    except Exception as e:
+        print(f'Error: {e}')
     finally:
-        client_socket.close()
+        connection.close()
 
-def start_server():
-    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    server_socket.bind((HOST, PORT))
-    server_socket.listen(5)
-    print(f"Listening on {HOST}:{PORT}...")
+def send_response(conn, status_code, status_text, content_type, content):
+    headers = [
+        f'HTTP/1.1 {status_code} {status_text}',
+        f'Content-Type: {content_type}',
+        f'Content-Length: {len(content)}',
+        'Connection: close',
+        '', ''
+    ]
+    header_data = '\r\n'.join(headers).encode('utf-8')
+    conn.sendall(header_data + content)
 
-    while True:
-        client_sock, addr = server_socket.accept()
-        print(f"Accepted connection from {addr}")
-        client_thread = threading.Thread(target=handle_client, args=(client_sock,))
-        client_thread.start()
+def run_server():
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_socket:
+        server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        server_socket.bind((HOST, PORT))
+        server_socket.listen(5)
+        print(f'Serving HTTP on {HOST} port {PORT} ...')
 
-if __name__ == "__main__":
-    start_server()
+        while True:
+            client_conn, client_addr = server_socket.accept()
+            threading.Thread(target=handle_client, args=(client_conn, client_addr)).start()
+
+if __name__ == '__main__':
+    run_server()
