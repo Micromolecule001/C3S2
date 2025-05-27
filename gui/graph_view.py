@@ -89,3 +89,17 @@ class GraphCanvas(tk.Canvas):
                 nx, ny = x + 60, y + 40
                 nx2, ny2 = nx + 60, ny + 40
                 self.create_line(nx, ny, nx2, ny2, arrow=tk.LAST)
+
+    def run_flowchart_threaded(self):
+        thread = threading.Thread(target=self.run_flowchart)
+        thread.daemon = True
+        thread.start()
+
+    def run_flowchart(self):
+        print("➡️ Початок виконання схеми")
+        for block_id, (rect, text, x, y) in self.block_widgets.items():
+            print(f"🧩 Виконую блок {block_id}...")
+            self.itemconfig(rect, fill="orange")
+            time.sleep(1)
+            self.itemconfig(rect, fill="lightblue")
+        print("✅ Виконання завершено")

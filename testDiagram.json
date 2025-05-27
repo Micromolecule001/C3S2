@@ -1,0 +1,43 @@
+{
+  "start_id": "1",
+  "blocks": [
+    {
+      "id": "1",
+      "type": "ASSIGN_VAR",
+      "args": [
+        "1"
+      ],
+      "next": [
+        "2"
+      ]
+    },
+    {
+      "id": "2",
+      "type": "INPUT",
+      "args": [
+        "3"
+      ],
+      "next": [
+        "4"
+      ]
+    },
+    {
+      "id": "3",
+      "type": "INPUT",
+      "args": [
+        "34"
+      ],
+      "next": [
+        "2"
+      ]
+    },
+    {
+      "id": "4",
+      "type": "CONDITION_EQ",
+      "args": [
+        "4"
+      ],
+      "next": []
+    }
+  ]
+}
