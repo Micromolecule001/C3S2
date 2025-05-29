@@ -5,7 +5,7 @@ import mimetypes
 
 DOCUMENT_ROOT = '.'  
 DEFAULT_FILE = 'index.html'
-HOST = '192.168.0.102'
+HOST = '192.168.0.104'
 PORT = 8000
 BUFFER_SIZE = 1024
 
